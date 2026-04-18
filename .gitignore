@@ -1,3 +1,8 @@
 .env
 
-data/
+# Dataset files (tracked: this README, folder layout via .gitkeep only)
+src/data/ehr-note-qa/*
+!src/data/ehr-note-qa/.gitkeep
+
+src/data/mimic-iv/*
+!src/data/mimic-iv/.gitkeep
