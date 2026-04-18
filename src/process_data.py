@@ -1,0 +1,1 @@
+# This is the script we can use to process /data for upsert into a local postgres instance
