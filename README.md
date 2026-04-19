@@ -32,7 +32,7 @@ Early runs suggest **RAG is strong on descriptive questions**, while **agentic S
 
 ## Database setup
 
-The `db/` directory contains everything needed to spin up a local Postgres instance loaded with MIMIC-IV 3.1 and EHRNoteQA.
+The `src/db/` directory contains everything needed to spin up a local Postgres instance loaded with MIMIC-IV 3.1 and EHRNoteQA.
 
 ### Prerequisites
 
@@ -58,19 +58,19 @@ The schema is applied automatically on first boot.
 Skips `chartevents`, `labevents`, `emar`, `emar_detail`, `poe`, `poe_detail`, and `pharmacy` — tables not needed for EHRNoteQA benchmarking.
 
 ```bash
-caffeinate -i ./db/load_data.sh --slim
+caffeinate -i ./src/db/load_data.sh --slim
 ```
 
 **Full load (~2 hours, ~50–80 GB on disk):**
 
 ```bash
-caffeinate -i ./db/load_data.sh
+caffeinate -i ./src/db/load_data.sh
 ```
 
 On Linux or if you prefer not to use `caffeinate`, drop the `caffeinate -i` prefix. Both commands accept optional path overrides:
 
 ```bash
-./db/load_data.sh --slim /path/to/mimiciv/3.1 /path/to/EHRNoteQA.jsonl
+./src/db/load_data.sh --slim /path/to/mimiciv/3.1 /path/to/EHRNoteQA.jsonl
 ```
 
 ### Connect
