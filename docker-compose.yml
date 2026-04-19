@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: mimiciv_db
+    environment:
+      POSTGRES_USER: mimiciv
+      POSTGRES_PASSWORD: mimiciv
+      POSTGRES_DB: mimiciv
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+    shm_size: 256mb
+    command: >
+      postgres
+        -c max_wal_size=4GB
+        -c checkpoint_completion_target=0.9
+        -c wal_buffers=64MB
+        -c shared_buffers=512MB
+        -c work_mem=64MB
+        -c maintenance_work_mem=512MB
+
+volumes:
+  pgdata:

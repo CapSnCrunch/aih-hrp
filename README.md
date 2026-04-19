@@ -30,6 +30,59 @@ Electronic health records (EHRs) are heterogeneous and high-stakes. The project 
 
 Early runs suggest **RAG is strong on descriptive questions**, while **agentic SQL does better on temporal and quantitative reasoning**. Planned extensions include richer retrieval (e.g., NER) to improve RAG. Related literature spans temporal knowledge-graph modeling (e.g., RE-Net) and specialized medical reasoning frameworks; this work emphasizes **comparing full harnesses** rather than a single pipeline.
 
+## Database setup
+
+The `db/` directory contains everything needed to spin up a local Postgres instance loaded with MIMIC-IV 3.1 and EHRNoteQA.
+
+### Prerequisites
+
+```bash
+brew install --cask docker   # Docker Desktop (runs the Postgres container)
+brew install postgresql      # psql client tools (used by the load script)
+```
+
+Make sure Docker Desktop is open and running before proceeding. The compressed source data is **~10 GB**; once loaded, the Postgres data directory will expand to roughly **50–80 GB** on disk, so make sure you have the space.
+
+### Start the container
+
+```bash
+docker compose up -d
+```
+
+The schema is applied automatically on first boot.
+
+### Load the data
+
+**Recommended — slim load (~20 min, ~12 GB on disk):**
+
+Skips `chartevents`, `labevents`, `emar`, `emar_detail`, `poe`, `poe_detail`, and `pharmacy` — tables not needed for EHRNoteQA benchmarking.
+
+```bash
+caffeinate -i ./db/load_data.sh --slim
+```
+
+**Full load (~2 hours, ~50–80 GB on disk):**
+
+```bash
+caffeinate -i ./db/load_data.sh
+```
+
+On Linux or if you prefer not to use `caffeinate`, drop the `caffeinate -i` prefix. Both commands accept optional path overrides:
+
+```bash
+./db/load_data.sh --slim /path/to/mimiciv/3.1 /path/to/EHRNoteQA.jsonl
+```
+
+### Connect
+
+```bash
+psql -h localhost -U mimiciv -d mimiciv
+```
+
+Credentials: user `mimiciv`, password `mimiciv`, database `mimiciv`.
+
+---
+
 ## Course assignment (AI in Healthcare — high-risk project)
 
 This repo is the course **high-risk project**: something you have wanted to try but might not succeed at. **Grading emphasizes effort and rigor, not how impressive the final results are.** Ambitious or exploratory work is encouraged; weak or empty outcomes can still earn a strong grade if the attempt was serious. The instructors explicitly discourage choosing a project that would be easy for you.
