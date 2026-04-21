@@ -1,7 +1,8 @@
--- MIMIC-IV 3.1 schema + EHRNoteQA
+-- MIMIC-IV 3.1 schema + MIMIC-IV-Note 2.2 + EHRNoteQA
 
 CREATE SCHEMA IF NOT EXISTS mimiciv_hosp;
 CREATE SCHEMA IF NOT EXISTS mimiciv_icu;
+CREATE SCHEMA IF NOT EXISTS mimiciv_note;
 CREATE SCHEMA IF NOT EXISTS ehrqa;
 
 -- ============================================================
@@ -450,6 +451,48 @@ CREATE TABLE mimiciv_icu.ingredientevents (
 );
 
 -- ============================================================
+-- mimiciv_note
+-- ============================================================
+
+CREATE TABLE mimiciv_note.discharge (
+    note_id     TEXT NOT NULL PRIMARY KEY,
+    subject_id  INTEGER NOT NULL,
+    hadm_id     INTEGER,
+    note_type   TEXT,
+    note_seq    INTEGER,
+    charttime   TIMESTAMP,
+    storetime   TIMESTAMP,
+    text        TEXT
+);
+
+CREATE TABLE mimiciv_note.discharge_detail (
+    note_id         TEXT NOT NULL,
+    subject_id      INTEGER NOT NULL,
+    field_name      TEXT,
+    field_value     TEXT,
+    field_ordinal   DOUBLE PRECISION
+);
+
+CREATE TABLE mimiciv_note.radiology (
+    note_id     TEXT NOT NULL PRIMARY KEY,
+    subject_id  INTEGER NOT NULL,
+    hadm_id     INTEGER,
+    note_type   TEXT,
+    note_seq    INTEGER,
+    charttime   TIMESTAMP,
+    storetime   TIMESTAMP,
+    text        TEXT
+);
+
+CREATE TABLE mimiciv_note.radiology_detail (
+    note_id         TEXT NOT NULL,
+    subject_id      INTEGER NOT NULL,
+    field_name      TEXT,
+    field_value     TEXT,
+    field_ordinal   DOUBLE PRECISION
+);
+
+-- ============================================================
 -- ehrqa
 -- ============================================================
 
@@ -497,3 +540,28 @@ CREATE INDEX ON mimiciv_icu.outputevents (subject_id, stay_id);
 CREATE INDEX ON mimiciv_icu.procedureevents (subject_id, stay_id);
 CREATE INDEX ON mimiciv_icu.ingredientevents (subject_id, stay_id);
 CREATE INDEX ON ehrqa.questions (patient_id);
+CREATE INDEX ON mimiciv_note.discharge (subject_id);
+CREATE INDEX ON mimiciv_note.discharge (hadm_id);
+CREATE INDEX ON mimiciv_note.discharge_detail (note_id);
+CREATE INDEX ON mimiciv_note.radiology (subject_id);
+CREATE INDEX ON mimiciv_note.radiology_detail (note_id);
+
+-- ============================================================
+-- pgvector + RAG chunks
+-- ============================================================
+
+CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE IF NOT EXISTS mimiciv_note.chunks (
+    chunk_id     SERIAL PRIMARY KEY,
+    subject_id   INTEGER NOT NULL,
+    note_id      TEXT NOT NULL,
+    source_table TEXT NOT NULL,
+    section_name TEXT,
+    chunk_text   TEXT NOT NULL,
+    embedding    vector(1024)
+);
+
+CREATE INDEX IF NOT EXISTS chunks_subject_id_idx ON mimiciv_note.chunks (subject_id);
+CREATE INDEX IF NOT EXISTS chunks_embedding_idx ON mimiciv_note.chunks
+    USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
