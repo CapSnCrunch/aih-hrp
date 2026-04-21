@@ -5,7 +5,7 @@ from datetime import datetime
 from .base import BaseHarness, BenchmarkQuestion, QuestionResult
 
 EMBED_MODEL = "mxbai-embed-large"
-TOP_K = 5
+TOP_K = 10
 
 
 class RAGHarness(BaseHarness):
