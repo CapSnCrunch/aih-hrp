@@ -12,11 +12,13 @@ import json
 from harness.naive import NaiveHarness
 from harness.rag import RAGHarness
 from harness.sql import SQLHarness
+from harness.code_agent import CodeAgentHarness
 
 HARNESSES = {
     "naive": NaiveHarness,
     "rag": RAGHarness,
     "sql": SQLHarness,
+    "code_agent": CodeAgentHarness,
 }
 
 
@@ -28,12 +30,13 @@ def main():
     parser.add_argument("--limit", type=int, default=None, help="Max questions to run")
     parser.add_argument("--output-dir", default="results", help="Directory for result files")
     parser.add_argument("--ollama-url", default="http://localhost:11434")
+    parser.add_argument("--verbose", action="store_true", help="Print SQL queries and observations inline")
     args = parser.parse_args()
 
     harness = HARNESSES[args.harness](model=args.model, ollama_url=args.ollama_url)
 
     print(f"Running {args.harness} harness with model '{args.model}'...")
-    results = harness.run(category=args.category, limit=args.limit)
+    results = harness.run(category=args.category, limit=args.limit, verbose=args.verbose)
 
     summary = harness.score(results)
     print(json.dumps(summary, indent=2))

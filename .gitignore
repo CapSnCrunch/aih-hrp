@@ -1,4 +1,5 @@
 .env
+.DS_Store
 
 # Dataset files (tracked: this README, folder layout via .gitkeep only)
 src/data/ehr-note-qa/*
@@ -6,3 +7,11 @@ src/data/ehr-note-qa/*
 
 src/data/mimic-iv/*
 !src/data/mimic-iv/.gitkeep
+
+# Benchmark results (local only — contains patient data derivatives)
+results/
+
+# Python
+__pycache__/
+*.pyc
+.venv/

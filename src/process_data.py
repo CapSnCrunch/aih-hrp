@@ -146,7 +146,7 @@ def main():
 
     for i, patient_id in enumerate(remaining, 1):
         chunks = process_patient(conn, patient_id, args.ollama_url)
-        print(f"[{i}/{len(remaining)}] patient={patient_id} chunks={chunks}")
+        print(f"[{i}/{len(remaining)}] patient={patient_id} chunks={chunks}", flush=True)
 
     conn.close()
     print("Done.")

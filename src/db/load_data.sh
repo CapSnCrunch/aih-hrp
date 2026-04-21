@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
-# Loads MIMIC-IV CSVs and EHRNoteQA into the mimiciv Postgres container.
+# Loads MIMIC-IV CSVs, MIMIC-IV-Note, and EHRNoteQA into the mimiciv Postgres container.
 # Run from the repo root after `docker compose up -d`.
 #
 # Usage:
-#   ./db/load_data.sh [--slim] [MIMIC_DIR] [EHRQA_FILE]
+#   ./src/db/load_data.sh [--slim] [MIMIC_DIR] [EHRQA_FILE] [NOTE_DIR]
 #
 # --slim  Skips large event tables not needed for EHRNoteQA benchmarking:
 #         chartevents, labevents, emar, emar_detail, poe, poe_detail, pharmacy
-#         Reduces load time from ~2 hours to ~20 minutes and disk from ~80GB to ~10GB.
+#         Reduces load time from ~2 hours to ~20 minutes and disk from ~80GB to ~12GB.
 #
 # Defaults:
 #   MIMIC_DIR  = ~/Projects/ai-in-healthcare/mimiciv/3.1
 #   EHRQA_FILE = ~/Projects/ai-in-healthcare/EHRNoteQA.jsonl
+#   NOTE_DIR   = ~/Projects/ai-in-healthcare/mimiciv/physionet.org/files/mimic-iv-note/2.2/note
 
 set -euo pipefail
 
@@ -27,6 +28,7 @@ done
 
 MIMIC_DIR="${POSITIONAL[0]:-$HOME/Projects/ai-in-healthcare/mimiciv/3.1}"
 EHRQA_FILE="${POSITIONAL[1]:-$HOME/Projects/ai-in-healthcare/EHRNoteQA.jsonl}"
+NOTE_DIR="${POSITIONAL[2]:-$HOME/Projects/ai-in-healthcare/mimiciv/physionet.org/files/mimic-iv-note/2.2/note}"
 
 PGHOST="${PGHOST:-localhost}"
 PGPORT="${PGPORT:-5432}"
@@ -97,6 +99,14 @@ if ! $SLIM; then
 fi
 
 echo ""
+echo "=== mimiciv_note ==="
+
+copy_gz "$NOTE_DIR/discharge.csv.gz"         mimiciv_note.discharge
+copy_gz "$NOTE_DIR/discharge_detail.csv.gz"  mimiciv_note.discharge_detail
+copy_gz "$NOTE_DIR/radiology.csv.gz"         mimiciv_note.radiology
+copy_gz "$NOTE_DIR/radiology_detail.csv.gz"  mimiciv_note.radiology_detail
+
+echo ""
 echo "=== ehrqa ==="
 
 echo "  Loading EHRNoteQA.jsonl -> ehrqa.questions"
@@ -147,6 +157,6 @@ $PSQL -c "
 SELECT schemaname, tablename,
        (xpath('/row/c/text()', query_to_xml('SELECT count(*) AS c FROM '||schemaname||'.'||tablename, false, true, '')))[1]::text::int AS rows
 FROM pg_tables
-WHERE schemaname IN ('mimiciv_hosp','mimiciv_icu','ehrqa')
+WHERE schemaname IN ('mimiciv_hosp','mimiciv_icu','mimiciv_note','ehrqa')
 ORDER BY schemaname, tablename;
 "
