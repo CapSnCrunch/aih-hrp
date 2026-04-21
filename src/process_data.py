@@ -22,7 +22,7 @@ OVERLAP_TOKENS = 48    # overlap between chunks
 MAX_CHARS = MAX_TOKENS * 4
 OVERLAP_CHARS = OVERLAP_TOKENS * 4
 
-SECTION_RE = re.compile(r'^([A-Z][A-Z &/()-]{2,}):[ \t]*$', re.MULTILINE)
+SECTION_RE = re.compile(r'^([A-Z][A-Za-z &/()-]{2,}):[ \t]*$', re.MULTILINE)
 
 
 def split_into_sections(text: str) -> list[tuple[str, str]]:
