@@ -17,8 +17,8 @@ import psycopg2
 import psycopg2.extras
 
 EMBED_MODEL = "mxbai-embed-large"
-MAX_TOKENS = 512       # max tokens per chunk (approximated as chars/4)
-OVERLAP_TOKENS = 64    # overlap between chunks
+MAX_TOKENS = 384       # conservative limit for mxbai-embed-large (512 token max)
+OVERLAP_TOKENS = 48    # overlap between chunks
 MAX_CHARS = MAX_TOKENS * 4
 OVERLAP_CHARS = OVERLAP_TOKENS * 4
 
@@ -59,16 +59,23 @@ def chunk_text(text: str, section_name: str) -> Generator[tuple[str, str], None,
         start = end - OVERLAP_CHARS
 
 
-def embed(text: str, ollama_url: str) -> list[float]:
-    """Get embedding vector from Ollama."""
-    payload = json.dumps({"model": EMBED_MODEL, "prompt": text}).encode()
-    req = urllib.request.Request(
-        f"{ollama_url}/api/embeddings",
-        data=payload,
-        headers={"Content-Type": "application/json"},
-    )
-    with urllib.request.urlopen(req) as resp:
-        return json.loads(resp.read())["embedding"]
+def embed(text: str, ollama_url: str) -> list[float] | None:
+    """Get embedding vector from Ollama. Returns None if the chunk cannot be embedded."""
+    for attempt, t in enumerate([text, text[:len(text)//2]]):
+        payload = json.dumps({"model": EMBED_MODEL, "prompt": t}).encode()
+        req = urllib.request.Request(
+            f"{ollama_url}/api/embeddings",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(req) as resp:
+                return json.loads(resp.read())["embedding"]
+        except urllib.error.HTTPError as e:
+            if e.code == 500 and attempt == 0:
+                continue  # retry with half-length text
+            print(f"      [SKIP] embed failed (HTTP {e.code}), chunk len={len(t)}")
+            return None
 
 
 def get_patient_ids(conn) -> list[int]:
@@ -115,6 +122,8 @@ def process_patient(conn, subject_id: int, ollama_url: str) -> int:
             for section_name, body in split_into_sections(text):
                 for sec, chunk in chunk_text(body, section_name):
                     vector = embed(chunk, ollama_url)
+                    if vector is None:
+                        continue
                     insert_chunk(conn, subject_id, note_id, source_table, sec, chunk, vector)
                     count += 1
     return count
