@@ -1,6 +1,10 @@
 # aih-hrp
 AI in Healthcare course High-Risk Project
 
+## Note on AI Usage
+
+In this project, we used Claude Sonnet 4.6 to write the boilerplate code for Postgres DB spinup, the harness classes, the benchmark runner, and to fix the syntax for plots. The model did not receive access to any data. The final report was written completely by hand and a final-pass with Claude was used as a grammar checker.
+
 ## Project plan
 
 This repository supports a benchmarking study on **how patient data architecture affects LLM clinical reasoning**. The work compares ways of organizing healthcare information—from raw notes to relational and graph representations—and measures their impact on question answering. The evaluation contrasts **retrieval-augmented generation (RAG)** with **tool-use** setups (e.g., SQL access) to see which designs are most reliable for personalized-medicine-style queries.
